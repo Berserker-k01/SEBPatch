@@ -1,7 +1,7 @@
 # Safe Exam Browser Patch
 A patch to bypass Safe Exam Browser restrictions.
 
-- Currently supported SEB version: 3.8.0.742
+- Patch for version 3.8.0.742 has been deprecated and will not receive updates in the future, please upgrade to Safe Exam Browser 3.9.0.787.
 
 ## How to use
 Check out the [Wiki](https://github.com/school-cheating/SEBPatch/wiki)
