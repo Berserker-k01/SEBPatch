@@ -3,3 +3,6 @@ contact_links:
   - name: FAQs
     url: https://github.com/school-cheating/SEBPatch/wiki/FAQs
     about: Before opening an issue, check out the FAQs. Any issue corresponding to the FAQs will be ignored and closed.
+  - name: Questions and other things
+    url: https://github.com/school-cheating/SEBPatch/discussions
+    about: Ask questions or discuss things about the Safe Exam Browser patch.
