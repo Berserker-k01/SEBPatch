@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2025 ETH Zürich, IT Services
  * 
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -536,14 +536,20 @@ if (typeof __SEB_focusElement === 'undefined') {
 
 		private void InitializeBounds()
 		{
-			if (isMainWindow && WindowSettings.FullScreenMode)
+			// Modification pour mode plein écran avec la barre des tâches SEB visible
+			if (isMainWindow)
 			{
+				// Configuration plein écran
 				Top = 0;
 				Left = 0;
-				Height = SystemParameters.WorkArea.Height;
-				Width = SystemParameters.WorkArea.Width;
-				ResizeMode = ResizeMode.NoResize;
+				Height = SystemParameters.PrimaryScreenHeight;
+				Width = SystemParameters.PrimaryScreenWidth;
+				// Mode sans bordures
 				WindowStyle = WindowStyle.None;
+				// Empêcher le redimensionnement
+				ResizeMode = ResizeMode.NoResize;
+				// S'assurer que la barre des tâches SEB reste visible
+				Topmost = true;
 			}
 			else if (WindowSettings.RelativeHeight == 100 && WindowSettings.RelativeWidth == 100)
 			{
