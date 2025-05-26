@@ -1,4 +1,4 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="../Templates/Colors.xaml" />
@@ -10,8 +10,8 @@
         </Border>
         <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="ButtonContent" Property="Background" Value="#AAADD8E6" />
-                <Setter TargetName="ButtonContent" Property="BorderBrush" Value="DodgerBlue" />
+                <Setter TargetName="ButtonContent" Property="Background" Value="#EEEEEE" />
+                <Setter TargetName="ButtonContent" Property="BorderBrush" Value="Black" />
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
                 <Setter TargetName="ButtonContent" Property="BorderBrush" Value="#AA87CEEB" />
@@ -30,8 +30,8 @@
                 <Setter TargetName="ButtonContent" Property="Opacity" Value="0.25" />
             </Trigger>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="ButtonContent" Property="Background" Value="LightBlue" />
-                <Setter TargetName="ButtonContent" Property="BorderBrush" Value="DodgerBlue" />
+                <Setter TargetName="ButtonContent" Property="Background" Value="#EEEEEE" />
+                <Setter TargetName="ButtonContent" Property="BorderBrush" Value="Black" />
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
                 <Setter TargetName="ButtonContent" Property="BorderBrush" Value="SkyBlue" />
@@ -48,8 +48,8 @@
         </Border>
         <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="ButtonContent" Property="Background" Value="LightBlue" />
-                <Setter TargetName="ButtonContent" Property="BorderBrush" Value="DodgerBlue" />
+                <Setter TargetName="ButtonContent" Property="Background" Value="#EEEEEE" />
+                <Setter TargetName="ButtonContent" Property="BorderBrush" Value="Black" />
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
                 <Setter TargetName="ButtonContent" Property="BorderBrush" Value="SkyBlue" />

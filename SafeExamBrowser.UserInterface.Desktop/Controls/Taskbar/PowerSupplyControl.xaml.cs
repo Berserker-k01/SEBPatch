@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2025 ETH Zürich, IT Services
  * 
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -110,18 +110,8 @@ namespace SafeExamBrowser.UserInterface.Desktop.Controls.Taskbar
 
 			BatteryCharge.Width = width > maxWidth ? maxWidth : (width < 0 ? 0 : width);
 
-			switch (status)
-			{
-				case BatteryChargeStatus.Critical:
-					BatteryCharge.Fill = Brushes.Red;
-					break;
-				case BatteryChargeStatus.Low:
-					BatteryCharge.Fill = Brushes.Orange;
-					break;
-				default:
-					BatteryCharge.Fill = initialBrush;
-					break;
-			}
+			// Modification pour que la batterie soit toujours en vert
+			BatteryCharge.Fill = Brushes.Green;
 		}
 
 		private void HandleBatteryStatus(BatteryChargeStatus chargeStatus)
