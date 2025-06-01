@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2025 ETH Zürich, IT Services
  * 
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -117,17 +117,31 @@ namespace SafeExamBrowser.Monitoring.Display
 				LogWorkingArea($"Saved original working area for {identifier}", originalWorkingArea);
 			}
 
+			// Utiliser la totalité de l'écran car nous allons masquer la barre des tâches de Windows
+			// et afficher celle de SEB en surcouche
 			var area = new Bounds
 			{
 				Left = 0,
 				Top = 0,
 				Right = Screen.PrimaryScreen.Bounds.Width,
-				Bottom = Screen.PrimaryScreen.Bounds.Height - taskbarHeight
+				Bottom = Screen.PrimaryScreen.Bounds.Height
 			};
 
 			LogWorkingArea($"Trying to set new working area for {identifier}", area);
 			nativeMethods.SetWorkingArea(area);
 			LogWorkingArea($"Working area of {identifier} is now set to", nativeMethods.GetWorkingArea());
+
+			// Masquer la barre des tâches de Windows en la rendant invisible
+			try
+			{
+				logger.Info("Attempting to hide Windows taskbar...");
+				nativeMethods.HideWindowsTaskbar();
+				logger.Info("Successfully hidden Windows taskbar.");
+			}
+			catch (Exception ex)
+			{
+				logger.Error($"Failed to hide Windows taskbar: {ex.Message}");
+			}
 		}
 
 		private void InitializeWallpaper()

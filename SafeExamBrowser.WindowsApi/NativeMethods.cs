@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2025 ETH Zürich, IT Services
  * 
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -22,6 +22,17 @@ using SafeExamBrowser.WindowsApi.Types;
 
 namespace SafeExamBrowser.WindowsApi
 {
+	[StructLayout(LayoutKind.Sequential)]
+	internal struct APPBARDATA
+	{
+		public int cbSize;
+		public IntPtr hWnd;
+		public uint uCallbackMessage;
+		public uint uEdge;
+		public RECT rc;
+		public IntPtr lParam;
+	}
+
 	public class NativeMethods : INativeMethods
 	{
 		private readonly ConcurrentDictionary<Guid, KeyboardHook> KeyboardHooks = new ConcurrentDictionary<Guid, KeyboardHook>();
@@ -536,6 +547,50 @@ namespace SafeExamBrowser.WindowsApi
 			}
 
 			return success;
+		}
+
+		public void HideWindowsTaskbar()
+		{
+			try
+			{
+				// Trouver la fenêtre de la barre des tâches
+				IntPtr taskbarHwnd = User32.FindWindow("Shell_TrayWnd", null);
+				if (taskbarHwnd == IntPtr.Zero)
+				{
+					return; // Barre des tâches non trouvée
+				}
+
+				// Configurer la barre des tâches pour qu'elle se masque automatiquement
+				var appBarData = new APPBARDATA
+				{
+					cbSize = Marshal.SizeOf(typeof(APPBARDATA)),
+					hWnd = taskbarHwnd,
+					lParam = (IntPtr)(User32.ABS_AUTOHIDE)
+				};
+
+				// Envoyer le message pour cacher la barre des tâches
+				User32.SHAppBarMessage(User32.ABM_SETSTATE, ref appBarData);
+
+				// Forcer la barre des tâches à se cacher en envoyant des messages supplémentaires
+				User32.ShowWindow(taskbarHwnd, (int)ShowWindowCommand.Hide);
+
+				// Rechercher également les fenêtres secondaires de la barre des tâches (comme la barre de notification)
+				IntPtr trayHwnd = User32.FindWindow("TrayNotifyWnd", null);
+				if (trayHwnd != IntPtr.Zero)
+				{
+					User32.ShowWindow(trayHwnd, (int)ShowWindowCommand.Hide);
+				}
+
+				IntPtr startHwnd = User32.FindWindow("Button", "Start");
+				if (startHwnd != IntPtr.Zero)
+				{
+					User32.ShowWindow(startHwnd, (int)ShowWindowCommand.Hide);
+				}
+			}
+			catch (Exception)
+			{
+				// Ignorer les exceptions en cas d'échec
+			}
 		}
 	}
 }

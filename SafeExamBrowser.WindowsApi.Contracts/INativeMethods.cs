@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2025 ETH Zürich, IT Services
  * 
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -224,5 +224,10 @@ namespace SafeExamBrowser.WindowsApi.Contracts
 		/// Attempts to set the state of the sticky keys feature of the operating system. Returns <c>true</c> if successful, otherwise <c>false</c>.
 		/// </summary>
 		bool TrySetStickyKeys(IStickyKeysState state);
+
+		/// <summary>
+		/// Hides the Windows taskbar by setting it to auto-hide and forcing it to hide.
+		/// </summary>
+		void HideWindowsTaskbar();
 	}
 }

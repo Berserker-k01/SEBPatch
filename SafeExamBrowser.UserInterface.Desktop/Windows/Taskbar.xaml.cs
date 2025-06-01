@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2025 ETH Zürich, IT Services
  * 
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -128,10 +128,21 @@ namespace SafeExamBrowser.UserInterface.Desktop.Windows
 		{
 			Dispatcher.Invoke(() =>
 			{
-				Width = SystemParameters.PrimaryScreenWidth;
-				Left = 0;
-				Top = SystemParameters.PrimaryScreenHeight - Height;
+				var height = Height;
+				var width = SystemParameters.PrimaryScreenWidth;
+				
+				// Utiliser l'écran complet au lieu de la zone de travail pour positionner la barre des tâches
+				// car la barre des tâches Windows est maintenant cachée
+				var screenHeight = SystemParameters.PrimaryScreenHeight;
 
+				Left = 0;
+				Top = screenHeight - height;
+				Width = width;
+				
+				// S'assurer que la fenêtre est toujours au premier plan
+				Topmost = true;
+
+				// Obtenir la position et la taille en pixels physiques pour le logging
 				var position = this.TransformToPhysical(Left, Top);
 				var size = this.TransformToPhysical(Width, Height);
 

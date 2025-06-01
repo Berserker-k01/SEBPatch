@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2025 ETH Zürich, IT Services
  * 
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -118,5 +118,24 @@ namespace SafeExamBrowser.WindowsApi
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+		// Constants pour la barre des tâches
+		internal const int ABM_SETSTATE = 0x0000000A;
+		internal const int ABS_AUTOHIDE = 0x0000001;
+		internal const int ABS_ALWAYSONTOP = 0x0000002;
+
+		[DllImport("shell32.dll", SetLastError = true)]
+		internal static extern IntPtr SHAppBarMessage(uint dwMessage, ref APPBARDATA pData);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern int GetSystemMetrics(int nIndex);
+
+		// Constantes pour GetSystemMetrics
+		internal const int SM_CXSCREEN = 0;
+		internal const int SM_CYSCREEN = 1;
+
+		// Messages Windows
+		internal const uint WM_COMMAND = 0x0111;
+		internal const int SC_CLOSE = 0xF060;
 	}
 }
