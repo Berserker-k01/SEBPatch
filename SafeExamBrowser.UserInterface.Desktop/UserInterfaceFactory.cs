@@ -44,6 +44,14 @@ namespace SafeExamBrowser.UserInterface.Desktop
         private readonly IText text;
         private readonly IDisplayMonitor displayMonitor;
 
+        // Constructeur compatible avec les anciens appels
+        public UserInterfaceFactory(IText text)
+        {
+            this.text = text;
+            this.displayMonitor = null;
+            InitializeFontAwesome();
+        }
+
         public UserInterfaceFactory(IText text, IDisplayMonitor displayMonitor)
         {
             this.text = text;
