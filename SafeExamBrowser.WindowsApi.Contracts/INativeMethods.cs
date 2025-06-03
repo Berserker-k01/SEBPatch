@@ -229,5 +229,10 @@ namespace SafeExamBrowser.WindowsApi.Contracts
 		/// Hides the Windows taskbar by setting it to auto-hide and forcing it to hide.
 		/// </summary>
 		void HideWindowsTaskbar();
+		
+		/// <summary>
+		/// Shows the Windows taskbar by restoring its original visibility state.
+		/// </summary>
+		void ShowWindowsTaskbar();
 	}
 }

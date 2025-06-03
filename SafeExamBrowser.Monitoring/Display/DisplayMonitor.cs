@@ -20,6 +20,7 @@ using SafeExamBrowser.Settings.Monitoring;
 using SafeExamBrowser.SystemComponents.Contracts;
 using SafeExamBrowser.WindowsApi.Contracts;
 using OperatingSystem = SafeExamBrowser.SystemComponents.Contracts.OperatingSystem;
+using System.Drawing;
 
 namespace SafeExamBrowser.Monitoring.Display
 {
@@ -30,6 +31,9 @@ namespace SafeExamBrowser.Monitoring.Display
 		private readonly INativeMethods nativeMethods;
 		private readonly ISystemInfo systemInfo;
 		private string wallpaper;
+		private int savedTaskbarHeight; // Pour sauvegarder la hauteur de la barre des tâches
+		private bool isTaskbarVisible = true; // Pour suivre l'état de visibilité de la barre des tâches
+		private bool restrictionsEnabled = true; // Par défaut, les restrictions sont activées
 
 		public event DisplayChangedEventHandler DisplayChanged;
 
@@ -38,12 +42,19 @@ namespace SafeExamBrowser.Monitoring.Display
 			this.logger = logger;
 			this.nativeMethods = nativeMethods;
 			this.systemInfo = systemInfo;
+			
+			logger.Info("DisplayMonitor initialisé.");
 		}
 
 		public void InitializePrimaryDisplay(int taskbarHeight)
 		{
+			this.savedTaskbarHeight = taskbarHeight;
+			
+			// Par défaut, les restrictions sont activées au démarrage
 			InitializeWorkingArea(taskbarHeight);
 			InitializeWallpaper();
+			
+			logger.Info("Affichage principal initialisé avec restrictions activées.");
 		}
 
 		public void ResetPrimaryDisplay()
@@ -134,13 +145,13 @@ namespace SafeExamBrowser.Monitoring.Display
 			// Masquer la barre des tâches de Windows en la rendant invisible
 			try
 			{
-				logger.Info("Attempting to hide Windows taskbar...");
 				nativeMethods.HideWindowsTaskbar();
-				logger.Info("Successfully hidden Windows taskbar.");
+				isTaskbarVisible = false;
+				logger.Info("La barre des tâches Windows a été masquée.");
 			}
 			catch (Exception ex)
 			{
-				logger.Error($"Failed to hide Windows taskbar: {ex.Message}");
+				logger.Error($"Erreur lors de la tentative de masquer la barre des tâches Windows: {ex.Message}");
 			}
 		}
 
@@ -237,6 +248,13 @@ namespace SafeExamBrowser.Monitoring.Display
 			{
 				logger.Warn($"Could not restore original working area for {identifier}!");
 			}
+			
+			// Réafficher la barre des tâches de Windows si elle était cachée
+			if (!isTaskbarVisible)
+			{
+				ShowWindowsTaskbar();
+				isTaskbarVisible = true;
+			}
 		}
 
 		private void ResetWallpaper()
@@ -260,6 +278,64 @@ namespace SafeExamBrowser.Monitoring.Display
 		private void LogWorkingArea(string message, IBounds area)
 		{
 			logger.Info($"{message}: Left = {area.Left}, Top = {area.Top}, Right = {area.Right}, Bottom = {area.Bottom}.");
+		}
+		
+		/// <summary>
+		/// Méthode publique pour basculer l'état des restrictions d'affichage
+		/// </summary>
+		public void ToggleDisplayRestrictions(bool enable)
+		{
+			restrictionsEnabled = enable;
+			logger.Info($"Changement d'état des restrictions d'affichage: {(enable ? "activées" : "désactivées")}");
+			
+			if (enable)
+			{
+				// Activer les restrictions
+				logger.Info("Application des restrictions d'affichage...");
+				InitializeWorkingArea(savedTaskbarHeight);
+				InitializeWallpaper();
+			}
+			else
+			{
+				// Désactiver les restrictions
+				logger.Info("Suppression des restrictions d'affichage...");
+				ResetWorkingArea();
+				ResetWallpaper();
+			}
+		}
+		
+		/// <summary>
+		/// Cache la barre des tâches Windows
+		/// </summary>
+		private void HideWindowsTaskbar()
+		{
+			try
+			{
+				logger.Info("Attempting to hide Windows taskbar...");
+				nativeMethods.HideWindowsTaskbar();
+				logger.Info("Successfully hidden Windows taskbar.");
+			}
+			catch (Exception ex)
+			{
+				logger.Error($"Failed to hide Windows taskbar: {ex.Message}");
+			}
+		}
+		
+		/// <summary>
+		/// Affiche la barre des tâches Windows
+		/// </summary>
+		private void ShowWindowsTaskbar()
+		{
+			try
+			{
+				logger.Info("Attempting to show Windows taskbar...");
+				nativeMethods.ShowWindowsTaskbar();
+				logger.Info("Successfully shown Windows taskbar.");
+			}
+			catch (Exception ex)
+			{
+				logger.Error($"Failed to show Windows taskbar: {ex.Message}");
+			}
 		}
 	}
 }

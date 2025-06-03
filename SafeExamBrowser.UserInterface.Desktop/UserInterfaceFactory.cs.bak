@@ -1,0 +1,277 @@
+/*
+ * Copyright (c) 2025 ETH Zürich, IT Services
+ * 
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Windows;
+using System.Windows.Media;
+using FontAwesome.WPF;
+using SafeExamBrowser.Applications.Contracts;
+using SafeExamBrowser.Configuration.Contracts;
+using SafeExamBrowser.Core.Contracts.Notifications;
+using SafeExamBrowser.I18n.Contracts;
+using SafeExamBrowser.Logging.Contracts;
+using SafeExamBrowser.Monitoring.Contracts.Display;
+using SafeExamBrowser.Proctoring.Contracts;
+using SafeExamBrowser.Server.Contracts.Data;
+using SafeExamBrowser.Settings;
+using SafeExamBrowser.Settings.Browser;
+using SafeExamBrowser.Settings.Proctoring;
+using SafeExamBrowser.Settings.UserInterface;
+using SafeExamBrowser.SystemComponents.Contracts.Audio;
+using SafeExamBrowser.SystemComponents.Contracts.Keyboard;
+using SafeExamBrowser.SystemComponents.Contracts.Network;
+using SafeExamBrowser.SystemComponents.Contracts.PowerSupply;
+using SafeExamBrowser.UserInterface.Contracts;
+using SafeExamBrowser.UserInterface.Contracts.Browser;
+using SafeExamBrowser.UserInterface.Contracts.FileSystemDialog;
+using SafeExamBrowser.UserInterface.Contracts.MessageBox;
+using SafeExamBrowser.UserInterface.Contracts.Proctoring;
+using SafeExamBrowser.UserInterface.Contracts.Shell;
+using SafeExamBrowser.UserInterface.Contracts.Windows;
+using SafeExamBrowser.UserInterface.Contracts.Windows.Data;
+
+namespace SafeExamBrowser.UserInterface.Desktop
+{
+    public class UserInterfaceFactory : IUserInterfaceFactory
+    {
+        private readonly IText text;
+        private readonly IDisplayMonitor displayMonitor;
+
+        public UserInterfaceFactory(IText text, IDisplayMonitor displayMonitor)
+        {
+            this.text = text;
+            this.displayMonitor = displayMonitor;
+            InitializeFontAwesome();
+        }
+
+        public IUserInterface CreateUserInterface(SafeExamBrowser.Settings.AppConfig appConfig)
+        {
+            return new SafeExamBrowser.UserInterface.Desktop.Windows.UserInterface(appConfig, text);
+            this.text = text;
+            this.displayMonitor = displayMonitor;
+
+            InitializeFontAwesome();
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.Windows.IWindow CreateAboutWindow(SafeExamBrowser.Settings.AppConfig appConfig)
+        {
+            return new SafeExamBrowser.UserInterface.Desktop.Windows.AboutWindow(appConfig, text);
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.Browser.IRuntimeWindow CreateRuntimeWindow(SafeExamBrowser.Settings.AppConfig appConfig)
+        {
+            return System.Windows.Application.Current.Dispatcher.Invoke(() => new SafeExamBrowser.UserInterface.Desktop.Windows.RuntimeWindow(appConfig, text));
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.Shell.IActionCenter CreateActionCenter()
+        {
+            return new SafeExamBrowser.UserInterface.Desktop.Windows.ActionCenter();
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.Shell.IApplicationControl CreateApplicationControl(SafeExamBrowser.Applications.Contracts.IApplication<SafeExamBrowser.UserInterface.Contracts.Windows.IApplicationWindow> application, SafeExamBrowser.UserInterface.Contracts.Location location)
+        {
+            if (location == SafeExamBrowser.UserInterface.Contracts.Location.ActionCenter)
+            {
+                return new SafeExamBrowser.UserInterface.Desktop.Controls.ActionCenter.ApplicationControl(application);
+            }
+            else
+            {
+                return new SafeExamBrowser.UserInterface.Desktop.Controls.Taskbar.ApplicationControl(application);
+            }
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.System.ISystemControl CreateAudioControl(SafeExamBrowser.SystemComponents.Contracts.Audio.IAudio audio, SafeExamBrowser.UserInterface.Contracts.Location location)
+        {
+            if (location == SafeExamBrowser.UserInterface.Contracts.Location.ActionCenter)
+            {
+                return new SafeExamBrowser.UserInterface.Desktop.Controls.ActionCenter.AudioControl(audio, text);
+            }
+            else
+            {
+                return new SafeExamBrowser.UserInterface.Desktop.Controls.Taskbar.AudioControl(audio, text);
+            }
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.Browser.IBrowserWindow CreateBrowserWindow(SafeExamBrowser.UserInterface.Contracts.Browser.IBrowserControl control, SafeExamBrowser.Settings.Browser.BrowserSettings settings, bool isMainWindow, SafeExamBrowser.Logging.Contracts.ILogger logger)
+        {
+            return System.Windows.Application.Current.Dispatcher.Invoke(() => new SafeExamBrowser.UserInterface.Desktop.Windows.BrowserWindow(control, settings, text, logger, isMainWindow, displayMonitor));
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.MessageBox.ICredentialsDialog CreateCredentialsDialog(SafeExamBrowser.UserInterface.Contracts.MessageBox.CredentialsDialogPurpose purpose, string message, string title)
+        {
+            return System.Windows.Application.Current.Dispatcher.Invoke(() => new SafeExamBrowser.UserInterface.Desktop.Windows.CredentialsDialog(purpose, message, title, text));
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.FileSystemDialog.IExamSelectionDialog CreateExamSelectionDialog(System.Collections.Generic.IEnumerable<SafeExamBrowser.Server.Contracts.Data.Exam> exams)
+        {
+            return System.Windows.Application.Current.Dispatcher.Invoke(() => new SafeExamBrowser.UserInterface.Desktop.Windows.ExamSelectionDialog(exams, text));
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.System.ISystemControl CreateKeyboardLayoutControl(SafeExamBrowser.SystemComponents.Contracts.Keyboard.IKeyboard keyboard, SafeExamBrowser.UserInterface.Contracts.Location location)
+        {
+            if (location == SafeExamBrowser.UserInterface.Contracts.Location.ActionCenter)
+            {
+                return new SafeExamBrowser.UserInterface.Desktop.Controls.ActionCenter.KeyboardLayoutControl(keyboard, text);
+            }
+            else
+            {
+                return new SafeExamBrowser.UserInterface.Desktop.Controls.Taskbar.KeyboardLayoutControl(keyboard, text);
+            }
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.Shell.ILockScreen CreateLockScreen(string message, string title, System.Collections.Generic.IEnumerable<SafeExamBrowser.UserInterface.Contracts.Shell.LockScreenOption> options, SafeExamBrowser.Settings.UserInterface.LockScreenSettings settings)
+        {
+            return System.Windows.Application.Current.Dispatcher.Invoke(() => new SafeExamBrowser.UserInterface.Desktop.Windows.LockScreen(message, title, options, settings, text));
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.Windows.IWindow CreateLogWindow(SafeExamBrowser.Logging.Contracts.ILogger logger)
+        {
+            var window = default(SafeExamBrowser.UserInterface.Desktop.Windows.LogWindow);
+            var windowReadyEvent = new System.Threading.AutoResetEvent(false);
+            var windowThread = new System.Threading.Thread(() =>
+            {
+                window = new SafeExamBrowser.UserInterface.Desktop.Windows.LogWindow(logger, text);
+                window.Closed += (o, args) => window.Dispatcher.InvokeShutdown();
+                window.Show();
+
+                windowReadyEvent.Set();
+
+                System.Windows.Threading.Dispatcher.Run();
+            });
+
+            windowThread.SetApartmentState(System.Threading.ApartmentState.STA);
+            windowThread.IsBackground = true;
+            windowThread.Start();
+
+            windowReadyEvent.WaitOne();
+
+            return window;
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.System.ISystemControl CreateNetworkControl(SafeExamBrowser.SystemComponents.Contracts.Network.INetworkAdapter adapter, SafeExamBrowser.UserInterface.Contracts.Location location)
+        {
+            if (location == SafeExamBrowser.UserInterface.Contracts.Location.ActionCenter)
+            {
+                return new SafeExamBrowser.UserInterface.Desktop.Controls.ActionCenter.NetworkControl(adapter, text);
+            }
+            else
+            {
+                return new SafeExamBrowser.UserInterface.Desktop.Controls.Taskbar.NetworkControl(adapter, text);
+            }
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.Notifications.INotificationControl CreateNotificationControl(SafeExamBrowser.Core.Contracts.Notifications.INotification notification, SafeExamBrowser.UserInterface.Contracts.Location location)
+        {
+            if (location == SafeExamBrowser.UserInterface.Contracts.Location.ActionCenter)
+            {
+                return new SafeExamBrowser.UserInterface.Desktop.Controls.ActionCenter.NotificationButton(notification);
+            }
+            else
+            {
+                return new SafeExamBrowser.UserInterface.Desktop.Controls.Taskbar.NotificationButton(notification);
+            }
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.MessageBox.IPasswordDialog CreatePasswordDialog(string message, string title)
+        {
+            return System.Windows.Application.Current.Dispatcher.Invoke(() => new SafeExamBrowser.UserInterface.Desktop.Windows.PasswordDialog(message, title, text));
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.MessageBox.IPasswordDialog CreatePasswordDialog(SafeExamBrowser.I18n.Contracts.TextKey message, SafeExamBrowser.I18n.Contracts.TextKey title)
+        {
+            return System.Windows.Application.Current.Dispatcher.Invoke(() => new SafeExamBrowser.UserInterface.Desktop.Windows.PasswordDialog(text.Get(message), text.Get(title), text));
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.System.ISystemControl CreatePowerSupplyControl(SafeExamBrowser.SystemComponents.Contracts.PowerSupply.IPowerSupply powerSupply, SafeExamBrowser.UserInterface.Contracts.Location location)
+        {
+            if (location == SafeExamBrowser.UserInterface.Contracts.Location.ActionCenter)
+            {
+                return new SafeExamBrowser.UserInterface.Desktop.Controls.ActionCenter.PowerSupplyControl(powerSupply, text);
+            }
+            else
+            {
+                return new SafeExamBrowser.UserInterface.Desktop.Controls.Taskbar.PowerSupplyControl(powerSupply, text);
+            }
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.Proctoring.IProctoringFinalizationDialog CreateProctoringFinalizationDialog()
+        {
+            return System.Windows.Application.Current.Dispatcher.Invoke(() => new SafeExamBrowser.UserInterface.Desktop.Windows.ProctoringFinalizationDialog(text));
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.Proctoring.IProctoringWindow CreateProctoringWindow(SafeExamBrowser.UserInterface.Contracts.Proctoring.IProctoringControl control)
+        {
+            return System.Windows.Application.Current.Dispatcher.Invoke(() => new SafeExamBrowser.UserInterface.Desktop.Windows.ProctoringWindow(control, text));
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.Notifications.INotificationControl CreateRaiseHandControl(SafeExamBrowser.Proctoring.Contracts.IProctoringController controller, SafeExamBrowser.UserInterface.Contracts.Location location, SafeExamBrowser.Settings.Proctoring.ProctoringSettings settings)
+        {
+            if (location == SafeExamBrowser.UserInterface.Contracts.Location.ActionCenter)
+            {
+                return new SafeExamBrowser.UserInterface.Desktop.Controls.ActionCenter.RaiseHandControl(controller, settings, text);
+            }
+            else
+            {
+                return new SafeExamBrowser.UserInterface.Desktop.Controls.Taskbar.RaiseHandControl(controller, settings, text);
+            }
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.Windows.ISplashScreen CreateSplashScreen(SafeExamBrowser.Settings.AppConfig appConfig = null)
+        {
+            var window = default(SafeExamBrowser.UserInterface.Desktop.Windows.SplashScreen);
+            var windowReadyEvent = new System.Threading.AutoResetEvent(false);
+            var windowThread = new System.Threading.Thread(() =>
+            {
+                window = new SafeExamBrowser.UserInterface.Desktop.Windows.SplashScreen(text, appConfig);
+                window.Closed += (o, args) => window.Dispatcher.InvokeShutdown();
+                window.Show();
+
+                windowReadyEvent.Set();
+
+                System.Windows.Threading.Dispatcher.Run();
+            });
+
+            windowThread.SetApartmentState(System.Threading.ApartmentState.STA);
+            windowThread.IsBackground = true;
+            windowThread.Start();
+
+            windowReadyEvent.WaitOne();
+
+            return window;
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.Browser.IBrowserWindow CreateBrowserWindow(SafeExamBrowser.UserInterface.Contracts.Browser.IBrowserControl control, SafeExamBrowser.Settings.Browser.BrowserSettings settings, bool isMainWindow, SafeExamBrowser.Logging.Contracts.ILogger logger)
+        {
+            return System.Windows.Application.Current.Dispatcher.Invoke(() => new SafeExamBrowser.UserInterface.Desktop.Windows.BrowserWindow(control, settings, text, logger, isMainWindow, displayMonitor));
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.MessageBox.IServerFailureDialog CreateServerFailureDialog(string info, bool showFallback)
+        {
+            return System.Windows.Application.Current.Dispatcher.Invoke(() => new SafeExamBrowser.UserInterface.Desktop.Windows.ServerFailureDialog(info, showFallback, text));
+        }
+
+        public SafeExamBrowser.UserInterface.Contracts.Shell.ITaskbar CreateTaskbar(SafeExamBrowser.Logging.Contracts.ILogger logger)
+        {
+            return new SafeExamBrowser.UserInterface.Desktop.Windows.Taskbar(logger);
+        }
+        public SafeExamBrowser.UserInterface.Contracts.Shell.ITaskview CreateTaskview()
+        {
+            return new SafeExamBrowser.UserInterface.Desktop.Windows.Taskview();
+        }
+
+        private void InitializeFontAwesome()
+        {
+            // To be able to use FontAwesome in XAML icon resources, we need to make sure that the FontAwesome.WPF assembly is loaded into
+            // the AppDomain before attempting to load an icon resource - thus the creation of an unused image below...
+            FontAwesome.WPF.ImageAwesome.CreateImageSource(FontAwesome.WPF.FontAwesome.FontAwesome, System.Windows.Media.Brushes.Black);
+        }
+    }
+}

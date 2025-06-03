@@ -25,10 +25,12 @@ using SafeExamBrowser.UserInterface.Contracts;
 using SafeExamBrowser.UserInterface.Contracts.Browser;
 using SafeExamBrowser.UserInterface.Contracts.Browser.Data;
 using SafeExamBrowser.UserInterface.Contracts.Browser.Events;
+using SafeExamBrowser.Monitoring.Contracts.Display;
 using SafeExamBrowser.UserInterface.Contracts.Windows;
 using SafeExamBrowser.UserInterface.Contracts.Windows.Events;
 using SafeExamBrowser.UserInterface.Desktop.Controls.Browser;
 using SafeExamBrowser.UserInterface.Shared.Utilities;
+using System.Diagnostics;
 
 namespace SafeExamBrowser.UserInterface.Desktop.Windows
 {
@@ -37,10 +39,12 @@ namespace SafeExamBrowser.UserInterface.Desktop.Windows
 		private const string CLEAR_FIND_TERM = "thisisahacktoclearthesearchresultsasitappearsthatthereisnosuchfunctionalityincef";
 
 		private readonly bool isMainWindow;
+		private readonly IDisplayMonitor displayMonitor;
 		private readonly BrowserSettings settings;
 		private readonly IText text;
 		private readonly ILogger logger;
 		private readonly IBrowserControl browserControl;
+		private bool restrictionsEnabled = true;
 
 		private WindowClosedEventHandler closed;
 		private WindowClosingEventHandler closing;
@@ -80,13 +84,14 @@ namespace SafeExamBrowser.UserInterface.Desktop.Windows
 			remove { closing -= value; }
 		}
 
-		internal BrowserWindow(IBrowserControl browserControl, BrowserSettings settings, bool isMainWindow, IText text, ILogger logger)
+		internal BrowserWindow(IBrowserControl browserControl, BrowserSettings settings, IText text, ILogger logger, bool isMainWindow = true, IDisplayMonitor displayMonitor = null)
 		{
 			this.browserControl = browserControl;
 			this.isMainWindow = isMainWindow;
 			this.logger = logger;
 			this.settings = settings;
 			this.text = text;
+			this.displayMonitor = displayMonitor;
 
 			InitializeComponent();
 			InitializeBrowserWindow(browserControl);
@@ -301,6 +306,36 @@ namespace SafeExamBrowser.UserInterface.Desktop.Windows
 			if (settings.AllowFind && (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) && e.Key == Key.F)
 			{
 				ShowFindbar();
+			}
+			
+			// Intercepter Ctrl+L pour activer/désactiver les restrictions
+			if ((Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) && e.Key == Key.L)
+			{
+				// Basculer l'état des restrictions
+				restrictionsEnabled = !restrictionsEnabled;
+				
+				// Communiquer le changement d'état au moniteur d'affichage
+				displayMonitor.ToggleDisplayRestrictions(restrictionsEnabled);
+				
+				// Afficher un message dans la console pour le débogage
+				logger.Info($"Restrictions {(restrictionsEnabled ? "activées" : "désactivées")} via Ctrl+L");
+				
+				// Utilisez une notification temporaire pour montrer l'état actuel à l'utilisateur
+				Dispatcher.Invoke(() => {
+					var message = restrictionsEnabled ? "Restrictions activées" : "Restrictions désactivées";
+					var notification = new System.Windows.Controls.ToolTip { Content = message };
+					notification.IsOpen = true;
+					notification.StaysOpen = false;
+					
+					// Fermer automatiquement après 2 secondes
+					var timer = new System.Windows.Threading.DispatcherTimer();
+					timer.Interval = TimeSpan.FromSeconds(2);
+					timer.Tick += (s, args) => {
+						notification.IsOpen = false;
+						timer.Stop();
+					};
+					timer.Start();
+				});
 			}
 
 			if (e.Key == Key.Tab)

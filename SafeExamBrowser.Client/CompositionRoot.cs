@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2025 ETH Zürich, IT Services
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -104,24 +104,31 @@ namespace SafeExamBrowser.Client
 			InitializeText();
 
 			var processFactory = new ProcessFactory(ModuleLogger(nameof(ProcessFactory)));
-
-			uiFactory = BuildUserInterfaceFactory();
-			actionCenter = uiFactory.CreateActionCenter();
+			
+			// Initialiser d'abord les composants de base
 			context = new ClientContext();
-			messageBox = BuildMessageBox();
 			nativeMethods = new NativeMethods();
-			applicationMonitor = new ApplicationMonitor(TWO_SECONDS, ModuleLogger(nameof(ApplicationMonitor)), nativeMethods, processFactory);
-			networkAdapter = new NetworkAdapter(ModuleLogger(nameof(NetworkAdapter)), nativeMethods);
-			splashScreen = uiFactory.CreateSplashScreen();
 			systemInfo = new SystemInfo(new Registry(ModuleLogger(nameof(Registry))));
+			userInfo = new UserInfo(ModuleLogger(nameof(UserInfo)));
+			
+			// Créer le displayMonitor avant l'interface utilisateur pour l'injection
+			var displayMonitor = new DisplayMonitor(ModuleLogger(nameof(DisplayMonitor)), nativeMethods, systemInfo);
+			
+			// Créer l'interface utilisateur avec displayMonitor injecté
+			uiFactory = BuildUserInterfaceFactory(displayMonitor);
+			messageBox = BuildMessageBox();
+			actionCenter = uiFactory.CreateActionCenter();
+			splashScreen = uiFactory.CreateSplashScreen();
 			taskbar = uiFactory.CreateTaskbar(ModuleLogger("Taskbar"));
 			taskview = uiFactory.CreateTaskview();
-			userInfo = new UserInfo(ModuleLogger(nameof(UserInfo)));
-
+			
+			// Initialiser les autres composants
+			applicationMonitor = new ApplicationMonitor(TWO_SECONDS, ModuleLogger(nameof(ApplicationMonitor)), nativeMethods, processFactory);
+			networkAdapter = new NetworkAdapter(ModuleLogger(nameof(NetworkAdapter)), nativeMethods);
+			
 			var applicationFactory = new ApplicationFactory(applicationMonitor, ModuleLogger(nameof(ApplicationFactory)), nativeMethods, processFactory, new Registry(ModuleLogger(nameof(Registry))));
 			var clipboard = new Clipboard(ModuleLogger(nameof(Clipboard)), nativeMethods);
 			var coordinator = new Coordinator();
-			var displayMonitor = new DisplayMonitor(ModuleLogger(nameof(DisplayMonitor)), nativeMethods, systemInfo);
 			var explorerShell = new ExplorerShell(ModuleLogger(nameof(ExplorerShell)), nativeMethods);
 			var fileSystemDialog = BuildFileSystemDialog();
 			var runtimeProxy = new RuntimeProxy(runtimeHostUri, new ProxyObjectFactory(), ModuleLogger(nameof(RuntimeProxy)), Interlocutor.Client);
@@ -398,14 +405,14 @@ namespace SafeExamBrowser.Client
 			}
 		}
 
-		private IUserInterfaceFactory BuildUserInterfaceFactory()
+		private IUserInterfaceFactory BuildUserInterfaceFactory(IDisplayMonitor displayMonitor)
 		{
 			switch (uiMode)
 			{
 				case UserInterfaceMode.Mobile:
 					return new Mobile.UserInterfaceFactory(text);
 				default:
-					return new Desktop.UserInterfaceFactory(text);
+					return new Desktop.UserInterfaceFactory(text, displayMonitor);
 			}
 		}
 

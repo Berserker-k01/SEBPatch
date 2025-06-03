@@ -592,5 +592,49 @@ namespace SafeExamBrowser.WindowsApi
 				// Ignorer les exceptions en cas d'échec
 			}
 		}
+		
+		public void ShowWindowsTaskbar()
+		{
+			try
+			{
+				// Trouver la fenêtre de la barre des tâches
+				IntPtr taskbarHwnd = User32.FindWindow("Shell_TrayWnd", null);
+				if (taskbarHwnd == IntPtr.Zero)
+				{
+					return; // Barre des tâches non trouvée
+				}
+
+				// Désactiver l'auto-hide de la barre des tâches
+				var appBarData = new APPBARDATA
+				{
+					cbSize = Marshal.SizeOf(typeof(APPBARDATA)),
+					hWnd = taskbarHwnd,
+					lParam = (IntPtr)0 // Désactiver ABS_AUTOHIDE
+				};
+
+				// Envoyer le message pour restaurer la barre des tâches
+				User32.SHAppBarMessage(User32.ABM_SETSTATE, ref appBarData);
+
+				// Montrer la barre des tâches
+				User32.ShowWindow(taskbarHwnd, (int)ShowWindowCommand.Show);
+
+				// Rechercher et montrer également les fenêtres secondaires de la barre des tâches
+				IntPtr trayHwnd = User32.FindWindow("TrayNotifyWnd", null);
+				if (trayHwnd != IntPtr.Zero)
+				{
+					User32.ShowWindow(trayHwnd, (int)ShowWindowCommand.Show);
+				}
+
+				IntPtr startHwnd = User32.FindWindow("Button", "Start");
+				if (startHwnd != IntPtr.Zero)
+				{
+					User32.ShowWindow(startHwnd, (int)ShowWindowCommand.Show);
+				}
+			}
+			catch (Exception)
+			{
+				// Ignorer les exceptions en cas d'échec
+			}
+		}
 	}
 }

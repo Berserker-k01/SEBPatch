@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2025 ETH Zürich, IT Services
  * 
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -45,5 +45,11 @@ namespace SafeExamBrowser.Monitoring.Contracts.Display
 		/// Validates the currently active display configuration according to the given settings.
 		/// </summary>
 		ValidationResult ValidateConfiguration(DisplaySettings settings);
+
+		/// <summary>
+		/// Toggle display restrictions on or off
+		/// </summary>
+		/// <param name="enable">True to enable restrictions, false to disable them</param>
+		void ToggleDisplayRestrictions(bool enable);
 	}
 }
